@@ -14,9 +14,21 @@ beforeAll(async () => {
   await app.init();
 });
 
-describe("AuthController (e2e)", () => {
-  test("/ (GET)", async () => {
-    const resp = await request(app.getHttpServer()).get("/auth");
-    expect(resp.statusCode).toBe(200);
+const correct_user_data = {
+  email: "test@test.ru",
+  password: "test123",
+  username: "testuser",
+};
+
+afterAll(async () => {
+  await app.close();
+});
+
+describe("AuthController", () => {
+  test("/auth/signup (POST)", async () => {
+    const resp = await request(app.getHttpServer())
+      .post("/auth/login")
+      .send({ email: "asd" });
+    expect(resp.statusCode).toBe(400);
   });
 });
