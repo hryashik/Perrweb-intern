@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model cards {
+  id          Int        @id @default(autoincrement())
+  column_id   Int
+  title       String     @db.VarChar(50)
+  description String?    @db.VarChar(50)
+  position    Int
+  created_at  DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at  DateTime?  @default(now()) @db.Timestamp(6)
+  columns     columns    @relation(fields: [column_id], references: [id], onDelete: Cascade)
+  comments    comments[]
+}
+
+model columns {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  title      String    @db.VarChar(50)
+  position   Int
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @db.Timestamp(6)
+  cards      cards[]
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model comments {
+  id         Int       @id @default(autoincrement())
+  card_id    Int
+  user_id    Int
+  content    String?
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @db.Timestamp(6)
+  cards      cards     @relation(fields: [card_id], references: [id], onDelete: Cascade)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model users {
+  id         Int        @id @default(autoincrement())
+  username   String     @unique @db.VarChar(50)
+  email      String     @unique @db.VarChar(50)
+  hash       String     @db.VarChar(64)
+  created_at DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at DateTime?  @default(now()) @db.Timestamp(6)
+  columns    columns[]
+  comments   comments[]
+}

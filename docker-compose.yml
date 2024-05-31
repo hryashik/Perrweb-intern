@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  dev-db:
+    container_name: db
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ROOT
+      POSTGRES_PASSWORD: ROOT_PASSWORD
+      POSTGRES_DB: dev_db
+    ports:
+      - "5432:5432"
+    
+  
