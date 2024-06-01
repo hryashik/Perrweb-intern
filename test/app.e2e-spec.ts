@@ -5,6 +5,7 @@ import { AppModule } from "./../src/app.module";
 
 let app: INestApplication;
 let server;
+let token;
 
 beforeAll(async () => {
   const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -47,12 +48,41 @@ describe("/auth", () => {
         .post("/auth/signup")
         .send(correct_user_data);
       expect(resp.statusCode).toBe(201);
+      expect(resp.body.auth_token).toBeDefined();
     });
     test("Should return 409", async () => {
       const resp = await request(server)
         .post("/auth/signup")
         .send(correct_user_data);
       expect(resp.statusCode).toBe(409);
+    });
+  });
+  describe("/login (POST)", () => {
+    test("Should return 400", async () => {
+      const resp = await request(server)
+        .post("/auth/login")
+        .send({ email: "asd" });
+      expect(resp.statusCode).toBe(400);
+      const resp2 = await request(server)
+        .post("/auth/login")
+        .send({ password: "123123" });
+      expect(resp2.statusCode).toBe(400);
+    });
+    test("Should return 401", async () => {
+      const resp = await request(server).post("/auth/login").send({
+        email: correct_user_data.email,
+        password: "test456",
+      });
+      expect(resp.statusCode).toBe(401);
+    });
+    test("Should return 200", async () => {
+      const resp = await request(server).post("/auth/login").send({
+        email: correct_user_data.email,
+        password: correct_user_data.password,
+      });
+      expect(resp.statusCode).toBe(200);
+      token = resp.body.auth_token;
+      expect(token).toBeDefined();
     });
   });
 });

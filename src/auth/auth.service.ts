@@ -1,10 +1,51 @@
-import { Injectable } from "@nestjs/common";
-import { PrismaService } from "../prisma/prisma.service";
+import { HttpException, Injectable } from "@nestjs/common";
+import { UsersService } from "../users/users.service";
+import { SignupDto } from "./dto/signup.dto";
+import * as bcrypt from "bcrypt";
+import { LoginDto } from "./dto/login.dto";
+import { JwtService } from "@nestjs/jwt";
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService) {}
-  createUser() {
-    return "a";
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  private async createHash(str: string) {
+    const saltRounds = 5;
+    const salt = await bcrypt.genSalt(saltRounds);
+    return bcrypt.hash(str, salt);
+  }
+
+  private async compareHash(hash: string, password: string) {
+    return bcrypt.compare(password, hash);
+  }
+
+  async signup(dto: SignupDto) {
+    const hash = await this.createHash(dto.password);
+    const user = await this.usersService.createUser({
+      email: dto.email,
+      hash,
+      username: dto.username,
+    });
+    const token = await this.jwtService.signAsync({
+      email: dto.email,
+      sub: user.id,
+    });
+    return { auth_token: token };
+  }
+
+  async login(dto: LoginDto) {
+    const user = await this.usersService.findOne(dto.email);
+    if (!user) throw new HttpException("Incorrect data", 401);
+    const compareResult = await this.compareHash(user.hash, dto.password);
+    if (!compareResult) throw new HttpException("Incorrect data", 401);
+
+    const token = await this.jwtService.signAsync({
+      email: dto.email,
+      sub: user.id,
+    });
+    return { auth_token: token };
   }
 }
