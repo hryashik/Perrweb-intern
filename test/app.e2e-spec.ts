@@ -48,7 +48,7 @@ describe("/auth", () => {
         .post("/auth/signup")
         .send(correct_user_data);
       expect(resp.statusCode).toBe(201);
-      expect(resp.body.auth_token).toBeDefined();
+      expect(resp.body.access_token).toBeDefined();
     });
     test("Should return 409", async () => {
       const resp = await request(server)
@@ -81,8 +81,56 @@ describe("/auth", () => {
         password: correct_user_data.password,
       });
       expect(resp.statusCode).toBe(200);
-      token = resp.body.auth_token;
+      token = resp.body.access_token;
       expect(token).toBeDefined();
+    });
+  });
+});
+
+describe("/users", () => {
+  describe("/users/:id (GET)", () => {
+    describe("Incorrect id", () => {
+      test("Should return 400", async () => {
+        const res = await request(server)
+          .get("/users/asd")
+          .set("Authorization", `Bearer ${token}`);
+        expect(res.statusCode).toBe(400);
+      });
+    });
+    describe("No authorization header", () => {
+      test("Should return 401", async () => {
+        const res = await request(server).get("/users/1");
+        expect(res.statusCode).toBe(401);
+      });
+    });
+    describe("Incorrect token", () => {
+      test("Should return 401", async () => {
+        const res = await request(server)
+          .get("/users/1")
+          .set("Authorization", `Bearer: asdkjsk2j13jkszx}`);
+        expect(res.statusCode).toBe(401);
+      });
+    });
+    test("should return 404", async () => {
+      const res = await request(server)
+        .get("/users")
+        .set("Authorization", `Bearer ${token}`);
+      expect(res.statusCode).toBe(404);
+      const res2 = await request(server)
+        .get("/users/333")
+        .set("Authorization", `Bearer ${token}`);
+      expect(res2.statusCode).toBe(404);
+    });
+    test("should return 200", async () => {
+      const res = await request(server)
+        .get("/users/1")
+        .set("Authorization", `Bearer ${token}`);
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty("username");
+      expect(res.body).toHaveProperty("email");
+      expect(res.body).toHaveProperty("id");
+      expect(res.body).not.toHaveProperty("hash");
+      expect(res.body).not.toHaveProperty("password");
     });
   });
 });

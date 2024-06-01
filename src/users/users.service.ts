@@ -25,9 +25,18 @@ export class UsersService {
     }
   }
 
-  async findOne(email: string) {
+  async findOneByEmail(email: string) {
     try {
       return await this.prisma.users.findUnique({ where: { email } });
+    } catch (error) {
+      console.error(error);
+      throw new HttpException("Internal server error", 500);
+    }
+  }
+
+  async findOneById(id: number) {
+    try {
+      return await this.prisma.users.findUnique({ where: { id } });
     } catch (error) {
       console.error(error);
       throw new HttpException("Internal server error", 500);
