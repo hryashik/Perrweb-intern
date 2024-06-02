@@ -236,4 +236,110 @@ describe("/columns", () => {
       });
     });
   });
+  describe("/:columnId (GET)", () => {
+    describe("Bad request, no data", () => {
+      test("Should return 400", async () => {
+        const resp = await request(server)
+          .get("/columns/asd")
+          .set("Authorization", `Bearer ${token}`);
+        expect(resp.statusCode).toBe(400);
+      });
+    });
+    describe("Unauthorized", () => {
+      test("Should return 401", async () => {
+        const resp = await request(server).get("/columns/1");
+        expect(resp.statusCode).toBe(401);
+      });
+    });
+    describe("Correct request", () => {
+      test("Should return 200", async () => {
+        const resp = await request(server)
+          .get("/columns/1")
+          .set("Authorization", `Bearer ${token}`);
+        expect(resp.statusCode).toBe(200);
+        expect(resp.body).toHaveProperty("id");
+        expect(resp.body).toHaveProperty("title");
+      });
+    });
+    describe("Correct request", () => {
+      test("Should return 200", async () => {
+        const resp = await request(server)
+          .get("/users/1/columns/1")
+          .set("Authorization", `Bearer ${token}`);
+        expect(resp.statusCode).toBe(200);
+        expect(resp.body).toHaveProperty("id");
+        expect(resp.body).toHaveProperty("title");
+      });
+    });
+    describe("Get all columns", () => {
+      test("Should return 200", async () => {
+        const resp = await request(server)
+          .get("/users/1/columns")
+          .set("Authorization", `Bearer ${token}`);
+        expect(resp.statusCode).toBe(200);
+        expect(resp.body.length).toBeGreaterThan(0);
+      });
+      test("Should return 200", async () => {
+        const resp = await request(server)
+          .get("/columns")
+          .set("Authorization", `Bearer ${token}`);
+        expect(resp.statusCode).toBe(200);
+        expect(resp.body.length).toBeGreaterThan(0);
+      });
+    });
+  });
+  describe("/:columnId (PATCH)", () => {
+    describe("Bad request, no data", () => {
+      test("Should return 400", async () => {
+        const resp = await request(server)
+          .patch("/columns/asd")
+          .send({ title: "updated" })
+          .set("Authorization", `Bearer ${token}`);
+        const resp2 = await request(server)
+          .patch("/columns/0")
+          .send({ title: "updated" })
+          .set("Authorization", `Bearer ${token}`);
+        expect(resp.statusCode).toBe(400);
+        expect(resp2.statusCode).toBe(400);
+      });
+    });
+    describe("Unauthorized", () => {
+      test("Should return 401", async () => {
+        const resp = await request(server)
+          .patch("/columns/1")
+          .send({ title: "updated" });
+        expect(resp.statusCode).toBe(401);
+      });
+    });
+    describe("Permission denied", () => {
+      test("Should return 403", async () => {
+        const resp = await request(server)
+          .patch("/columns/15")
+          .send({ title: "updated" })
+          .set("Authorization", `Bearer ${token}`);
+        const resp2 = await request(server)
+          .patch("/users/15/columns/1")
+          .send({ title: "updated" })
+          .set("Authorization", `Bearer ${token}`);
+        expect(resp.statusCode).toBe(403);
+        expect(resp2.statusCode).toBe(403);
+      });
+    });
+    describe("Correct request", () => {
+      test("Should return 201", async () => {
+        const resp = await request(server)
+          .patch("/columns/1")
+          .send({ title: "updated" })
+          .set("Authorization", `Bearer ${token}`);
+        const resp2 = await request(server)
+          .patch("/users/1/columns/1")
+          .send({ title: "updated" })
+          .set("Authorization", `Bearer ${token}`);
+        expect(resp.statusCode).toBe(201);
+        expect(resp.body).toHaveProperty("id");
+        expect(resp2.statusCode).toBe(201);
+        expect(resp2.body).toHaveProperty("id");
+      });
+    });
+  });
 });

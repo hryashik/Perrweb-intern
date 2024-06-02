@@ -8,13 +8,15 @@ import {
   Param,
   ParseIntPipe,
   Patch,
+  SetMetadata,
   UseGuards,
 } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { GetUser } from "../decorators/getUser.decorator";
 import { UpdateUserDto } from "./dto/updateUser.dto";
-import { CheckPermissionsGuard } from "../guards/checkRightsGuard";
-import { ColumnsService } from "src/columns/columns.service";
+import { ColumnsService } from "../columns/columns.service";
+import { UpdateColumnDto } from "../columns/dto/updateColumn.dto";
+import { PermissionsGuard } from "../guards/permissionsGuard";
 
 @UseGuards(JwtAuthGuard)
 @Controller("users")
@@ -34,7 +36,7 @@ export class UsersController {
     return result;
   }
 
-  @UseGuards(CheckPermissionsGuard)
+  @UseGuards(PermissionsGuard)
   @HttpCode(201)
   @Patch(":id")
   async updateUser(
@@ -45,8 +47,24 @@ export class UsersController {
     return this.usersService.updateUser(updateUserDto, user.id);
   }
 
+  @Get("/:userId/columns/")
+  getAllColumns(@Param("userId", ParseIntPipe) userId: number) {
+    return this.columnsService.getAllColumnsByUserId(userId);
+  }
+
   @Get("/:userId/columns/:columnId")
   getColumn(@Param("columnId", ParseIntPipe) columnId: number) {
     return this.columnsService.getColumnById(columnId);
+  }
+
+  @UseGuards(PermissionsGuard)
+  @SetMetadata("paramName", "columnId")
+  @Patch("/:userId/columns/:columnId")
+  @HttpCode(201)
+  updateColumn(
+    @Param("columnId", ParseIntPipe) columnId: number,
+    @Body() dto: UpdateColumnDto,
+  ) {
+    return this.columnsService.updateColumnById(dto, columnId);
   }
 }
