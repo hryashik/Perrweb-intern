@@ -47,4 +47,13 @@ export class ColumnsService {
       throw new InternalServerErrorException();
     }
   }
+
+  async deleteColumn(columnId: number) {
+    try {
+      await this.prisma.columns.delete({ where: { id: columnId } });
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException();
+    }
+  }
 }

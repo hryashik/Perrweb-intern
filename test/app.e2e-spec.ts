@@ -342,4 +342,54 @@ describe("/columns", () => {
       });
     });
   });
+  describe("/:columnId (DELETE)", () => {
+    describe("Bad request, no data", () => {
+      test("Should return 400", async () => {
+        const resp = await request(server)
+          .delete("/columns/asd")
+          .set("Authorization", `Bearer ${token}`);
+        const resp2 = await request(server)
+          .delete("users/1/columns/asd")
+          .set("Authorization", `Bearer ${token}`);
+        expect(resp.statusCode).toBe(400);
+        expect(resp2.statusCode).toBe(404);
+      });
+    });
+    describe("Unauthorized", () => {
+      test("Should return 401", async () => {
+        const resp = await request(server).delete("/columns/1");
+        const resp2 = await request(server).delete("/users/1/columns/1");
+        expect(resp.statusCode).toBe(401);
+        expect(resp2.statusCode).toBe(401);
+      });
+    });
+    describe("Permission denied", () => {
+      test("Should return 403", async () => {
+        const resp = await request(server)
+          .delete("/columns/15")
+          .set("Authorization", `Bearer ${token}`);
+        const resp2 = await request(server)
+          .delete("/users/15/columns/1")
+          .set("Authorization", `Bearer ${token}`);
+        expect(resp.statusCode).toBe(403);
+        expect(resp2.statusCode).toBe(403);
+      });
+    });
+    describe("Correct request", () => {
+      test("Should return 200", async () => {
+        const resp = await request(server)
+          .delete("/columns/1")
+          .set("Authorization", `Bearer ${token}`);
+        const column = await request(server)
+          .post("/columns")
+          .send(column_data)
+          .set("Authorization", `Bearer ${token}`);
+        const resp2 = await request(server)
+          .delete(`/users/1/columns/${column.body.id}`)
+          .set("Authorization", `Bearer ${token}`);
+        expect(resp.statusCode).toBe(200);
+        expect(resp2.statusCode).toBe(200);
+      });
+    });
+  });
 });

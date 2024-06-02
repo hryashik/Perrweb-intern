@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
@@ -49,5 +50,12 @@ export class ColumnsController {
     @Body() dto: UpdateColumnDto,
   ) {
     return this.columnsService.updateColumnById(dto, columnId);
+  }
+
+  @UseGuards(PermissionsGuard)
+  @SetMetadata("paramName", "columnId")
+  @Delete(":columnId")
+  deleteColumn(@Param("columnId", ParseIntPipe) columndId: number) {
+    return this.columnsService.deleteColumn(columndId);
   }
 }

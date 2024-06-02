@@ -2,6 +2,7 @@ import { JwtAuthGuard } from "../guards/jwtAuthGuard";
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   NotFoundException,
@@ -66,5 +67,12 @@ export class UsersController {
     @Body() dto: UpdateColumnDto,
   ) {
     return this.columnsService.updateColumnById(dto, columnId);
+  }
+
+  @UseGuards(PermissionsGuard)
+  @SetMetadata("paramName", "columnId")
+  @Delete("/:userId/columns/:columnId")
+  deleteColumn(@Param("columnId", ParseIntPipe) columnId: number) {
+    return this.columnsService.deleteColumn(columnId);
   }
 }

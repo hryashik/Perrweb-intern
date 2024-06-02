@@ -29,7 +29,6 @@ export class PermissionsGuard implements CanActivate {
     if (paramName === "columnId") {
       const column = await this.columnsService.getColumnById(id);
       const paramUserId = +request.params.userId || request.user.id;
-      console.log(paramUserId);
       if (!column || column.user_id !== paramUserId) return false;
       return true;
     }
