@@ -1,9 +1,10 @@
-import { Module } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { JwtModule } from "@nestjs/jwt";
 import { JwtStrategy } from "../guards/jwtStrategy";
 
+@Global()
 @Module({
   imports: [
     JwtModule.register({
@@ -14,5 +15,6 @@ import { JwtStrategy } from "../guards/jwtStrategy";
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
+  exports: [AuthService],
 })
 export class AuthModule {}

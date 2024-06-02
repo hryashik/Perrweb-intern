@@ -12,13 +12,13 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  private async createHash(str: string) {
+  async createHash(str: string) {
     const saltRounds = 5;
     const salt = await bcrypt.genSalt(saltRounds);
     return bcrypt.hash(str, salt);
   }
 
-  private async compareHash(hash: string, password: string) {
+  async compareHash(hash: string, password: string) {
     return bcrypt.compare(password, hash);
   }
 

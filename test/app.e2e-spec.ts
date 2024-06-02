@@ -111,26 +111,66 @@ describe("/users", () => {
         expect(res.statusCode).toBe(401);
       });
     });
-    test("should return 404", async () => {
-      const res = await request(server)
-        .get("/users")
-        .set("Authorization", `Bearer ${token}`);
-      expect(res.statusCode).toBe(404);
-      const res2 = await request(server)
-        .get("/users/333")
-        .set("Authorization", `Bearer ${token}`);
-      expect(res2.statusCode).toBe(404);
+    describe("No userid or user not defined", () => {
+      test("should return 404", async () => {
+        const res = await request(server)
+          .get("/users")
+          .set("Authorization", `Bearer ${token}`);
+        expect(res.statusCode).toBe(404);
+        const res2 = await request(server)
+          .get("/users/333")
+          .set("Authorization", `Bearer ${token}`);
+        expect(res2.statusCode).toBe(404);
+      });
     });
-    test("should return 200", async () => {
-      const res = await request(server)
-        .get("/users/1")
-        .set("Authorization", `Bearer ${token}`);
-      expect(res.statusCode).toBe(200);
-      expect(res.body).toHaveProperty("username");
-      expect(res.body).toHaveProperty("email");
-      expect(res.body).toHaveProperty("id");
-      expect(res.body).not.toHaveProperty("hash");
-      expect(res.body).not.toHaveProperty("password");
+    describe("Correct request", () => {
+      test("should return 200", async () => {
+        const res = await request(server)
+          .get("/users/1")
+          .set("Authorization", `Bearer ${token}`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty("username");
+        expect(res.body).toHaveProperty("email");
+        expect(res.body).toHaveProperty("id");
+        expect(res.body).not.toHaveProperty("hash");
+        expect(res.body).not.toHaveProperty("password");
+      });
+    });
+  });
+  describe("/users/:id (PATCH)", () => {
+    describe("Incorrect id", () => {
+      test("Should return 400", async () => {
+        const res = await request(server)
+          .patch("/users/asd")
+          .set("Authorization", `Bearer ${token}`);
+        expect(res.statusCode).toBe(400);
+      });
+    });
+    describe("No authorization header", () => {
+      test("Should return 401", async () => {
+        const res = await request(server).patch("/users/1");
+        expect(res.statusCode).toBe(401);
+      });
+    });
+    describe("Incorrect token", () => {
+      test("Should return 401", async () => {
+        const res = await request(server)
+          .patch("/users/1")
+          .set("Authorization", `Bearer: asdkjsk2j13jkszx}`);
+        expect(res.statusCode).toBe(401);
+      });
+    });
+    describe("No userid or user not defined", () => {
+      test("should return 404", async () => {
+        const res = await request(server)
+          .get("/users")
+          .set("Authorization", `Bearer ${token}`);
+        expect(res.statusCode).toBe(404);
+        const res2 = await request(server)
+          .get("/users/333")
+          .set("Authorization", `Bearer ${token}`);
+        expect(res2.statusCode).toBe(404);
+      });
     });
   });
 });
