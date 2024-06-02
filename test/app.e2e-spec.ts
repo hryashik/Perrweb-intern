@@ -23,6 +23,9 @@ const correct_user_data = {
   username: "testuser",
 };
 
+const column_data = { title: "my first column", position: 1 };
+let columnId;
+
 afterAll(async () => {
   await app.close();
 });
@@ -160,16 +163,76 @@ describe("/users", () => {
         expect(res.statusCode).toBe(401);
       });
     });
-    describe("No userid or user not defined", () => {
+    describe("No userid", () => {
       test("should return 404", async () => {
         const res = await request(server)
-          .get("/users")
+          .patch("/users")
           .set("Authorization", `Bearer ${token}`);
         expect(res.statusCode).toBe(404);
+      });
+    });
+    describe("No permissions", () => {
+      test("Should return 403", async () => {
         const res2 = await request(server)
-          .get("/users/333")
+          .patch("/users/333")
           .set("Authorization", `Bearer ${token}`);
-        expect(res2.statusCode).toBe(404);
+        expect(res2.statusCode).toBe(403);
+      });
+    });
+    describe("Correct requst", () => {
+      test("Should return 201", async () => {
+        const res = await request(server)
+          .patch("/users/1")
+          .set("Authorization", `Bearer ${token}`)
+          .send({
+            email: correct_user_data.email,
+            password: correct_user_data.password,
+            username: "testtest",
+          });
+        expect(res.statusCode).toBe(201);
+        expect(res.body).toHaveProperty("username", "testtest");
+        correct_user_data.username = "testtest";
+      });
+    });
+  });
+});
+
+describe("/columns", () => {
+  describe("/ (POST)", () => {
+    describe("Bad request, no data", () => {
+      test("Should return 400", async () => {
+        const resp = await request(server)
+          .post("/columns")
+          .send({ title: "" })
+          .set("Authorization", `Bearer ${token}`);
+        const resp2 = await request(server)
+          .post("/columns")
+          .send({ title: column_data.title })
+          .set("Authorization", `Bearer ${token}`);
+        const resp3 = await request(server)
+          .post("/columns")
+          .send({ position: 1 })
+          .set("Authorization", `Bearer ${token}`);
+        expect(resp.statusCode).toBe(400);
+        expect(resp2.statusCode).toBe(400);
+        expect(resp3.statusCode).toBe(400);
+      });
+    });
+    describe("Unauthorized", () => {
+      test("Should return 401", async () => {
+        const resp = await request(server).post("/columns").send(column_data);
+        expect(resp.statusCode).toBe(401);
+      });
+    });
+    describe("Correct request", () => {
+      test("Should return 201", async () => {
+        const resp = await request(server)
+          .post("/columns")
+          .send(column_data)
+          .set("Authorization", `Bearer ${token}`);
+        expect(resp.statusCode).toBe(201);
+        expect(resp.body).toHaveProperty("id");
+        columnId = resp.body.id;
       });
     });
   });

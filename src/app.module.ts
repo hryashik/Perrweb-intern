@@ -4,6 +4,7 @@ import { PrismaModule } from "./prisma/prisma.module";
 import { APP_PIPE } from "@nestjs/core";
 import { ConfigModule } from "@nestjs/config";
 import { UsersModule } from "./users/users.module";
+import { ColumnsModule } from "./columns/columns.module";
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { UsersModule } from "./users/users.module";
     PrismaModule,
     ConfigModule.forRoot({ isGlobal: true }),
     UsersModule,
+    ColumnsModule,
   ],
   controllers: [],
   providers: [

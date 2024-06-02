@@ -2,8 +2,8 @@ import { JwtAuthGuard } from "../guards/jwtAuthGuard";
 import {
   Body,
   Controller,
-  ForbiddenException,
   Get,
+  HttpCode,
   NotFoundException,
   Param,
   ParseIntPipe,
@@ -13,11 +13,16 @@ import {
 import { UsersService } from "./users.service";
 import { GetUser } from "../decorators/getUser.decorator";
 import { UpdateUserDto } from "./dto/updateUser.dto";
+import { CheckPermissionsGuard } from "../guards/checkRightsGuard";
+import { ColumnsService } from "src/columns/columns.service";
 
 @UseGuards(JwtAuthGuard)
 @Controller("users")
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly columnsService: ColumnsService,
+  ) {}
 
   @Get(":id")
   async getUser(@Param("id", ParseIntPipe) id: number) {
@@ -29,13 +34,19 @@ export class UsersController {
     return result;
   }
 
+  @UseGuards(CheckPermissionsGuard)
+  @HttpCode(201)
   @Patch(":id")
   async updateUser(
     @Param("id", ParseIntPipe) id: number,
     @GetUser() user: any,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    if (user.id !== id) throw new ForbiddenException();
     return this.usersService.updateUser(updateUserDto, user.id);
+  }
+
+  @Get("/:userId/columns/:columnId")
+  getColumn(@Param("columnId", ParseIntPipe) columnId: number) {
+    return this.columnsService.getColumnById(columnId);
   }
 }
