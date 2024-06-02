@@ -38,9 +38,19 @@ export class PermissionsGuard implements CanActivate {
         where: { id },
         include: { columns: { include: { users: true } } },
       });
-      if (!card) throw new NotFoundException("ha");
+      if (!card) throw new NotFoundException();
 
       return card.columns.user_id === request.user.id;
+    } else if (paramName === "commentId") {
+      const comment = await this.prisma.comments.findUnique({
+        where: { id },
+        include: {
+          cards: { include: { columns: { include: { users: true } } } },
+        },
+      });
+      if (!comment) throw new NotFoundException();
+
+      return comment.cards.columns.user_id === request.user.id;
     }
     return request.user.id === id;
   }

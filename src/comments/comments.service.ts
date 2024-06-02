@@ -1,5 +1,10 @@
-import { Injectable, InternalServerErrorException } from "@nestjs/common";
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 @Injectable()
 export class CommentsService {
@@ -44,6 +49,20 @@ export class CommentsService {
         where: { user_id: userId },
       });
     } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async deleteCommentById(commentId: number) {
+    try {
+      return await this.prisma.comments.findMany({
+        where: { id: commentId },
+      });
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        throw new NotFoundException();
+      }
       console.error(error);
       throw new InternalServerErrorException();
     }

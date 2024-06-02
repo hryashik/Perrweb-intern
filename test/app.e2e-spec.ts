@@ -657,7 +657,7 @@ describe("comments", () => {
   describe("/comments/:id (GET)", () => {
     describe("Unauthorized", () => {
       test("Should return", async () => {
-        const res = await request(server).get("/comments/:id");
+        const res = await request(server).get("/comments/1");
         expect(res.statusCode).toBe(401);
       });
     });
@@ -672,6 +672,34 @@ describe("comments", () => {
         expect(res.statusCode).toBe(200);
         expect(res.body.id).toBeDefined();
         expect(res2.statusCode).toBe(200);
+      });
+    });
+  });
+  describe("/comments/:id (DELETE)", () => {
+    describe("Unauthorized", () => {
+      test("Should return", async () => {
+        const res = await request(server).delete("/comments/1");
+        expect(res.statusCode).toBe(401);
+      });
+    });
+
+    describe("Not found comment", () => {
+      test("Should return 404", async () => {
+        const res = await request(server)
+          .delete(`/comments/222`)
+          .set("Authorization", `Bearer ${token}`);
+        console.log(res.body);
+        expect(res.statusCode).toBe(404);
+      });
+    });
+
+    describe("Correct request", () => {
+      test("Should return 200", async () => {
+        const res = await request(server)
+          .delete(`/comments/${comment_id}`)
+          .set("Authorization", `Bearer ${token}`);
+
+        expect(res.statusCode).toBe(200);
       });
     });
   });
