@@ -25,13 +25,14 @@ const correct_user_data = {
 
 const column_data = { title: "my first column", position: 1 };
 const card_data = { column_id: 1, position: 1, title: "first card" };
+let card_id;
 let columnId;
 
 afterAll(async () => {
   await app.close();
 });
 
-describe("/auth", () => {
+describe("auth", () => {
   describe("/signup (POST)", () => {
     test("Should return 400", async () => {
       const resp = await request(server)
@@ -91,7 +92,7 @@ describe("/auth", () => {
   });
 });
 
-describe("/users", () => {
+describe("users", () => {
   describe("/users/:id (GET)", () => {
     describe("Incorrect id", () => {
       test("Should return 400", async () => {
@@ -198,7 +199,7 @@ describe("/users", () => {
   });
 });
 
-describe("/columns", () => {
+describe("columns", () => {
   describe("/ (POST)", () => {
     describe("Bad request, no data", () => {
       test("Should return 400", async () => {
@@ -395,13 +396,14 @@ describe("/columns", () => {
           .send(column_data)
           .set("Authorization", `Bearer ${token}`);
         card_data.column_id = col.body.id;
+        columnId = col.body.id;
       });
     });
   });
 });
 
-describe("/cards", () => {
-  describe("/ (POST)", () => {
+describe("cards", () => {
+  describe("/cards (POST)", () => {
     describe("Incorrect data", () => {
       test("Should return 400", async () => {
         const res = await request(server)
@@ -421,6 +423,15 @@ describe("/cards", () => {
           position: 1,
           title: "first card",
         });
+        expect(res.statusCode).toBe(401);
+      });
+    });
+    describe("Column doesn't exist", () => {
+      test("Should return 404", async () => {
+        const res = await request(server)
+          .post("/cards")
+          .send({ ...card_data, column_id: 100 })
+          .set("Authorization", `Bearer ${token}`);
         expect(res.statusCode).toBe(404);
       });
     });
@@ -434,6 +445,107 @@ describe("/cards", () => {
         expect(res.body).toHaveProperty("id");
         expect(res.body).toHaveProperty("column_id");
         expect(res.body).toHaveProperty("position");
+        card_id = res.body.id;
+      });
+    });
+  });
+  describe("/cards (GET)", () => {
+    describe("Unauthorized", () => {
+      test("Should return 401", async () => {
+        const res = await request(server).get("/cards");
+        expect(res.statusCode).toBe(401);
+      });
+    });
+    describe("Correct request", () => {
+      test("Should return 200", async () => {
+        const res = await request(server)
+          .get("/cards")
+          .set("Authorization", `Bearer ${token}`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body.length).toBeGreaterThan(0);
+      });
+    });
+  });
+  describe("/columns/:columnid/cards (GET)", () => {
+    describe("Incorrect columnid", () => {
+      test("Should return 404", async () => {
+        const res = await request(server)
+          .get("/columns/29/cards")
+          .set("Authorization", `Bearer ${token}`);
+        expect(res.statusCode).toBe(404);
+      });
+    });
+    describe("Correct request", () => {
+      test("Should return 200", async () => {
+        const res = await request(server)
+          .get(`/columns/${columnId}/cards`)
+          .set("Authorization", `Bearer ${token}`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body.length).toBeGreaterThan(0);
+      });
+    });
+  });
+  describe("/cards/:cardid $(PATCH)", () => {
+    describe("Bad data", () => {
+      test("Should return 400", async () => {
+        const res = await request(server)
+          .patch(`/cards/${card_id}`)
+          .send({ position: "asd" })
+          .set("Authorization", `Bearer ${token}`);
+        expect(res.statusCode).toBe(400);
+      });
+    });
+    describe("Unauthorized", () => {
+      test("Should return 400", async () => {
+        const res = await request(server)
+          .patch(`/cards/${card_id}`)
+          .send({ position: 5 });
+        expect(res.statusCode).toBe(401);
+      });
+    });
+    describe("Permission denied", () => {
+      test("Should return 403", async () => {
+        const user = await request(server).post("/user").send({
+          email: "asdasdas@mail.ru",
+          username: "sadasdasd",
+          password: "sad213",
+        });
+        const token2 = user.body.access_token;
+        const createColumn = await request(server)
+          .post("/column")
+          .send(column_data)
+          .set("Authorization", `Bearer ${token2}`);
+        expect(createColumn.statusCode).toBe(201);
+        const createCard = await request(server)
+          .post("/card")
+          .send({ ...card_data, column_id: createColumn.body.id })
+          .set("Authorization", `Bearer ${token2}`);
+
+        const res = await request(server)
+          .patch(`/cards/${createCard.body.id}`)
+          .send({ position: 5 })
+          .set("Authorization", `Bearer ${token}`);
+        expect(res.statusCode).toBe(403);
+      });
+    });
+    describe("Card doesn't exist", () => {
+      test("Should return 404", async () => {
+        const res = await request(server)
+          .patch(`/cards/25`)
+          .send({ position: 10 })
+          .set("Authorization", `Bearer: ${token}`);
+
+        expect(res.statusCode).toBe(404);
+      });
+    });
+    describe("Correct request", () => {
+      test("Should return 200", async () => {
+        const res = await request(server)
+          .patch(`/cards/${card_id}`)
+          .send({ position: 10 })
+          .set("Authorization", `Bearer: ${token}`);
+
+        expect(res.statusCode).toBe(200);
       });
     });
   });

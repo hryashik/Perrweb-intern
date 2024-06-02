@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpCode,
+  NotFoundException,
   Param,
   ParseIntPipe,
   Patch,
@@ -18,11 +19,15 @@ import { ColumnsService } from "./columns.service";
 import { GetUser } from "../decorators/getUser.decorator";
 import { UpdateColumnDto } from "./dto/updateColumn.dto";
 import { PermissionsGuard } from "../guards/permissionsGuard";
+import { CardsService } from "../cards/cards.service";
 
 @UseGuards(JwtAuthGuard)
 @Controller("columns")
 export class ColumnsController {
-  constructor(private readonly columnsService: ColumnsService) {}
+  constructor(
+    private readonly columnsService: ColumnsService,
+    private readonly cardsService: CardsService,
+  ) {}
 
   @Post("/")
   createColumn(@Body() dto: CreateColumnDto, @GetUser() user: any) {
@@ -57,5 +62,12 @@ export class ColumnsController {
   @Delete(":columnId")
   deleteColumn(@Param("columnId", ParseIntPipe) columndId: number) {
     return this.columnsService.deleteColumn(columndId);
+  }
+
+  @Get(":columnId/cards")
+  async getCardsByColumnId(@Param("columnId", ParseIntPipe) columnId: number) {
+    const column = await this.columnsService.getColumnById(columnId);
+    if (!column) throw new NotFoundException();
+    return (await this.columnsService.getCardsByColumnId(columnId)).cards;
   }
 }

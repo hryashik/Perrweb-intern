@@ -56,4 +56,11 @@ export class ColumnsService {
       throw new InternalServerErrorException();
     }
   }
+
+  async getCardsByColumnId(columnId: number) {
+    return await this.prisma.columns.findUnique({
+      where: { id: columnId },
+      select: { cards: true },
+    });
+  }
 }

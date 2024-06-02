@@ -5,7 +5,7 @@ import { APP_PIPE } from "@nestjs/core";
 import { ConfigModule } from "@nestjs/config";
 import { UsersModule } from "./users/users.module";
 import { ColumnsModule } from "./columns/columns.module";
-import { CardsModule } from './cards/cards.module';
+import { CardsModule } from "./cards/cards.module";
 
 @Module({
   imports: [
