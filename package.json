@@ -18,6 +18,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "npm run db:test:restart && dotenv -e .env.test -- jest --config ./test/jest-e2e.json",
+    "db:dev:up": "docker compose up dev-db -d",
+    "db:dev:rm": "docker compose down dev-db -v",
+    "db:dev:restart": "npm run db:dev:rm && npm run db:dev:up && sleep 1 && npx prisma db push",
     "db:test:up": "docker compose up test-db -d",
     "db:test:rm": "docker compose down test-db -v",
     "db:test:restart": "npm run db:test:rm && npm run db:test:up && sleep 1 && dotenv -e .env.test -- npx prisma db push"
