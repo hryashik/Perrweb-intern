@@ -50,4 +50,9 @@ export class CardsController {
   deleteCard(@Param("cardId", ParseIntPipe) cardId: number) {
     return this.cardsService.deleteCardById(cardId);
   }
+
+  @Get(":cardId/comments")
+  getComments(@Param("cardId", ParseIntPipe) cardId: number) {
+    return this.cardsService.getAllCommentsByCardId(cardId);
+  }
 }

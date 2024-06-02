@@ -75,4 +75,22 @@ export class CardsService {
       throw new InternalServerErrorException();
     }
   }
+
+  async getAllCommentsByCardId(cardId: number) {
+    try {
+      return (
+        await this.prisma.cards.findUnique({
+          where: { id: cardId },
+          include: { comments: true },
+        })
+      ).comments;
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        throw new NotFoundException();
+      } else {
+        console.error(error);
+        throw new InternalServerErrorException();
+      }
+    }
+  }
 }

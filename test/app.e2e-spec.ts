@@ -638,4 +638,41 @@ describe("comments", () => {
       });
     });
   });
+  describe("/comments (GET)", () => {
+    describe("Unauthorized", () => {
+      test("Should return", async () => {
+        const res = await request(server).get("/comments");
+        expect(res.statusCode).toBe(401);
+      });
+    });
+    describe("Correct request", () => {
+      test("Should return 200", async () => {
+        const res = await request(server)
+          .get("/comments")
+          .set("Authorization", `Bearer ${token}`);
+        expect(res.statusCode).toBe(200);
+      });
+    });
+  });
+  describe("/comments/:id (GET)", () => {
+    describe("Unauthorized", () => {
+      test("Should return", async () => {
+        const res = await request(server).get("/comments/:id");
+        expect(res.statusCode).toBe(401);
+      });
+    });
+    describe("Correct request", () => {
+      test("Should return 200", async () => {
+        const res = await request(server)
+          .get(`/comments/${comment_id}`)
+          .set("Authorization", `Bearer ${token}`);
+        const res2 = await request(server)
+          .get(`/cards/${card_id}/comments`)
+          .set("Authorization", `Bearer ${token}`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body.id).toBeDefined();
+        expect(res2.statusCode).toBe(200);
+      });
+    });
+  });
 });
