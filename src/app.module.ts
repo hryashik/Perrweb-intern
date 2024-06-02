@@ -6,6 +6,7 @@ import { ConfigModule } from "@nestjs/config";
 import { UsersModule } from "./users/users.module";
 import { ColumnsModule } from "./columns/columns.module";
 import { CardsModule } from "./cards/cards.module";
+import { CommentsModule } from "./comments/comments.module";
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { CardsModule } from "./cards/cards.module";
     UsersModule,
     ColumnsModule,
     CardsModule,
+    CommentsModule,
   ],
   controllers: [],
   providers: [

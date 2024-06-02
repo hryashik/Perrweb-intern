@@ -27,6 +27,7 @@ const column_data = { title: "my first column", position: 1 };
 const card_data = { column_id: 1, position: 1, title: "first card" };
 let card_id;
 let columnId;
+let comment_id;
 
 afterAll(async () => {
   await app.close();
@@ -595,6 +596,45 @@ describe("cards", () => {
           .set("Authorization", `Bearer ${token}`);
 
         expect(res.statusCode).toBe(200);
+      });
+    });
+  });
+});
+
+describe("comments", () => {
+  describe("/comments (POST)", () => {
+    describe("Bad data", () => {
+      test("Should return 400", async () => {
+        const createCard = await request(server)
+          .post("/cards")
+          .set("Authorization", `Bearer ${token}`)
+          .send({ column_id: columnId, title: "zxc", position: 5 });
+        expect(createCard.statusCode).toBe(201);
+        card_id = createCard.body.id;
+        const res = await request(server)
+          .post("/comments")
+          .set("Authorization", `Bearer ${token}`)
+          .send({ content: "" });
+        expect(res.statusCode).toBe(400);
+      });
+    });
+    describe("Unauthorized", () => {
+      test("Should return", async () => {
+        const res = await request(server)
+          .post("/comments")
+          .send({ content: "asd" });
+        expect(res.statusCode).toBe(401);
+      });
+    });
+    describe("Correct data", () => {
+      test("Should return 201", async () => {
+        const res = await request(server)
+          .post("/comments")
+          .set("Authorization", `Bearer ${token}`)
+          .send({ content: "qweasdzxc", card_id: card_id });
+        expect(res.statusCode).toBe(201);
+        comment_id = res.body.id;
+        expect(comment_id).toBeGreaterThan(0);
       });
     });
   });
