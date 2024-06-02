@@ -24,6 +24,7 @@ const correct_user_data = {
 };
 
 const column_data = { title: "my first column", position: 1 };
+const card_data = { column_id: 1, position: 1, title: "first card" };
 let columnId;
 
 afterAll(async () => {
@@ -389,6 +390,50 @@ describe("/columns", () => {
           .set("Authorization", `Bearer ${token}`);
         expect(resp.statusCode).toBe(200);
         expect(resp2.statusCode).toBe(200);
+        const col = await request(server)
+          .post("/columns")
+          .send(column_data)
+          .set("Authorization", `Bearer ${token}`);
+        card_data.column_id = col.body.id;
+      });
+    });
+  });
+});
+
+describe("/cards", () => {
+  describe("/ (POST)", () => {
+    describe("Incorrect data", () => {
+      test("Should return 400", async () => {
+        const res = await request(server)
+          .post("/cards")
+          .send({
+            column_id: card_data.column_id,
+            position: 1,
+          })
+          .set("Authorization", `Bearer ${token}`);
+        expect(res.statusCode).toBe(400);
+      });
+    });
+    describe("Unauthorized", () => {
+      test("Should return 401", async () => {
+        const res = await request(server).post("/cards").send({
+          column_id: card_data.column_id,
+          position: 1,
+          title: "first card",
+        });
+        expect(res.statusCode).toBe(404);
+      });
+    });
+    describe("Correct request", () => {
+      test("Should return 201", async () => {
+        const res = await request(server)
+          .post("/cards")
+          .send(card_data)
+          .set("Authorization", `Bearer ${token}`);
+        expect(res.statusCode).toBe(201);
+        expect(res.body).toHaveProperty("id");
+        expect(res.body).toHaveProperty("column_id");
+        expect(res.body).toHaveProperty("position");
       });
     });
   });
