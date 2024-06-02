@@ -3,16 +3,18 @@ import {
   CanActivate,
   ExecutionContext,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { ColumnsService } from "../columns/columns.service";
+//import { ColumnsService } from "../columns/columns.service";
+import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private readonly columnsService: ColumnsService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -27,10 +29,18 @@ export class PermissionsGuard implements CanActivate {
     if (!request.user) throw new UnauthorizedException();
 
     if (paramName === "columnId") {
-      const column = await this.columnsService.getColumnById(id);
+      const column = await this.prisma.columns.findUnique({ where: { id } });
       const paramUserId = +request.params.userId || request.user.id;
       if (!column || column.user_id !== paramUserId) return false;
       return true;
+    } else if (paramName === "cardId") {
+      const card = await this.prisma.cards.findUnique({
+        where: { id },
+        include: { columns: { include: { users: true } } },
+      });
+      if (!card) throw new NotFoundException("ha");
+
+      return card.columns.user_id === request.user.id;
     }
     return request.user.id === id;
   }

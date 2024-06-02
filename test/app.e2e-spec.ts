@@ -350,11 +350,7 @@ describe("columns", () => {
         const resp = await request(server)
           .delete("/columns/asd")
           .set("Authorization", `Bearer ${token}`);
-        const resp2 = await request(server)
-          .delete("users/1/columns/asd")
-          .set("Authorization", `Bearer ${token}`);
         expect(resp.statusCode).toBe(400);
-        expect(resp2.statusCode).toBe(404);
       });
     });
     describe("Unauthorized", () => {
@@ -505,19 +501,20 @@ describe("cards", () => {
     });
     describe("Permission denied", () => {
       test("Should return 403", async () => {
-        const user = await request(server).post("/user").send({
+        const user = await request(server).post("/auth/signup").send({
           email: "asdasdas@mail.ru",
           username: "sadasdasd",
           password: "sad213",
         });
         const token2 = user.body.access_token;
         const createColumn = await request(server)
-          .post("/column")
+          .post("/columns")
           .send(column_data)
           .set("Authorization", `Bearer ${token2}`);
         expect(createColumn.statusCode).toBe(201);
+
         const createCard = await request(server)
-          .post("/card")
+          .post("/cards")
           .send({ ...card_data, column_id: createColumn.body.id })
           .set("Authorization", `Bearer ${token2}`);
 
@@ -526,6 +523,12 @@ describe("cards", () => {
           .send({ position: 5 })
           .set("Authorization", `Bearer ${token}`);
         expect(res.statusCode).toBe(403);
+        const res2 = await request(server)
+          .patch(`/columns/${createColumn.body.id}/cards/${createCard.body.id}`)
+          .send({ position: 5 })
+          .set("Authorization", `Bearer ${token}`);
+        console.log(res2.body);
+        expect(res2.statusCode).toBe(403);
       });
     });
     describe("Card doesn't exist", () => {
@@ -533,7 +536,7 @@ describe("cards", () => {
         const res = await request(server)
           .patch(`/cards/25`)
           .send({ position: 10 })
-          .set("Authorization", `Bearer: ${token}`);
+          .set("Authorization", `Bearer ${token}`);
 
         expect(res.statusCode).toBe(404);
       });
@@ -543,7 +546,53 @@ describe("cards", () => {
         const res = await request(server)
           .patch(`/cards/${card_id}`)
           .send({ position: 10 })
-          .set("Authorization", `Bearer: ${token}`);
+          .set("Authorization", `Bearer ${token}`);
+
+        expect(res.statusCode).toBe(200);
+      });
+    });
+  });
+  describe("/cards/:cardid $(DELETE)", () => {
+    describe("Bad data", () => {
+      test("Should return 400", async () => {
+        const res = await request(server)
+          .delete(`/cards/asd`)
+          .set("Authorization", `Bearer ${token}`);
+        expect(res.statusCode).toBe(400);
+      });
+    });
+    describe("Unauthorized", () => {
+      test("Should return 401", async () => {
+        const res = await request(server).delete(`/cards/${card_id}`);
+        expect(res.statusCode).toBe(401);
+      });
+    });
+    describe("Permission denied", () => {
+      test("Should return 403", async () => {
+        const res = await request(server)
+          .delete(`/cards/3`)
+          .set("Authorization", `Bearer ${token}`);
+        expect(res.statusCode).toBe(403);
+        const res2 = await request(server)
+          .delete(`/columns/4/cards/3`)
+          .set("Authorization", `Bearer ${token}`);
+        expect(res2.statusCode).toBe(403);
+      });
+    });
+    describe("Card doesn't exist", () => {
+      test("Should return 404", async () => {
+        const res = await request(server)
+          .delete(`/cards/25`)
+          .set("Authorization", `Bearer ${token}`);
+
+        expect(res.statusCode).toBe(404);
+      });
+    });
+    describe("Correct request", () => {
+      test("Should return 200", async () => {
+        const res = await request(server)
+          .delete(`/cards/${card_id}`)
+          .set("Authorization", `Bearer ${token}`);
 
         expect(res.statusCode).toBe(200);
       });

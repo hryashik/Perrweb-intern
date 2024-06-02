@@ -6,6 +6,7 @@ import {
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateCardDto } from "./dto/CreateCardDto";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { UpdateCardDto } from "./dto/updateCardDto";
 
 @Injectable()
 export class CardsService {
@@ -43,6 +44,33 @@ export class CardsService {
     try {
       return this.prisma.cards.findMany({ where: { column_id: columnId } });
     } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async updateCardById(dto: UpdateCardDto, cardId: number) {
+    try {
+      return await this.prisma.cards.update({
+        where: { id: cardId },
+        data: dto,
+      });
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        throw new NotFoundException();
+      }
+      console.error(error);
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async deleteCardById(cardId: number) {
+    try {
+      return await this.prisma.cards.delete({ where: { id: cardId } });
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        throw new NotFoundException();
+      }
       console.error(error);
       throw new InternalServerErrorException();
     }
